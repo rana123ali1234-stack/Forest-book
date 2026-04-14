@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مغامرات الغابة الذكية - نرجس عمران</title>
+    <title>مدينة الألوان - نرجس عمران</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Comic+Neue:wght@700&display=swap');
@@ -11,8 +11,7 @@
         .page-section { display: none; }
         .page-section.active { display: block; animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animal-img { max-height: 350px; object-fit: contain; filter: grayscale(100%) brightness(1.2) contrast(1.1); transition: 0.3s; cursor: pointer; }
-        .animal-img:hover { filter: grayscale(0%); }
+        .animal-img { max-height: 400px; object-fit: contain; transition: 0.3s; border-radius: 20px; }
         .tracing-dots { font-family: 'Comic Neue', cursive; color: #cbd5e1; border-bottom: 2px dashed #e2e8f0; letter-spacing: 6px; }
         @media print {
             nav, .no-print { display: none !important; }
@@ -26,8 +25,8 @@
     <nav class="bg-white shadow-sm border-b sticky top-0 z-50 no-print">
         <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-3">
             <div class="flex justify-between items-center">
-                <h1 class="text-xl font-bold text-purple-600">🐾 مدينة الألوان</h1>
-                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">إصدار نرجس التعليمي</span>
+                <h1 class="text-xl font-bold text-purple-600">🎨 مدينة الألوان</h1>
+                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">إصدار المبدعة نرجس عمران</span>
             </div>
             <div class="flex gap-2 overflow-x-auto pb-2" id="nav-tabs"></div>
         </div>
@@ -38,18 +37,17 @@
     <script>
         const animals = [
             { id: 'cover', name: 'الغلاف', type: 'special' },
-            { id: 'lion', name: 'الأسد', en: 'LION', search: 'عظمة', img: 'https://img.freepik.com/free-vector/cute-lion-cartoon-character_1308-134105.jpg' },
-            { id: 'elephant', name: 'الفيل', en: 'ELEPHANT', search: 'نملة', img: 'https://img.freepik.com/free-vector/cute-elephant-sitting-cartoon-vector-icon-illustration_138676-2213.jpg' },
-            { id: 'giraffe', name: 'الزرافة', en: 'GIRAFFE', search: 'طائر', img: 'https://img.freepik.com/free-vector/cute-giraffe-cartoon-vector-icon-illustration_138676-2484.jpg' },
-            { id: 'monkey', name: 'القرد', en: 'MONKEY', search: 'موزة', img: 'https://img.freepik.com/free-vector/cute-monkey-sitting-cartoon-vector-icon-illustration_138676-2457.jpg' },
-            { id: 'owl', name: 'البومة', en: 'OWL', search: 'هلال', img: 'https://img.freepik.com/free-vector/cute-owl-cartoon-vector-icon-illustration_138676-2311.jpg' }
+            { id: 'lion', name: 'الأسد', en: 'LION', search: 'عظمة', img: 'Screenshot_20260414-182747_Chrome.jpg' },
+            { id: 'owl', name: 'البومة', en: 'OWL', search: 'هلال', img: 'Screenshot_20260414-212533_Chrome.jpg' },
+            { id: 'elephant', name: 'الفيل', en: 'ELEPHANT', search: 'نملة', img: 'Screenshot_20260414-213329_Chrome.jpg' },
+            { id: 'monkey', name: 'القرد', en: 'MONKEY', search: 'موزة', img: 'Screenshot_20260414-221054_Chrome.jpg' },
+            { id: 'giraffe', name: 'الزرافة', en: 'GIRAFFE', search: 'طائر', img: 'images.jpeg' }
         ];
 
         const main = document.getElementById('main-content');
         const tabs = document.getElementById('nav-tabs');
 
         animals.forEach((item, idx) => {
-            // Create Tabs
             const btn = document.createElement('button');
             btn.className = `px-4 py-2 whitespace-nowrap rounded-full text-sm font-bold transition ${idx===0?'bg-purple-600 text-white shadow-lg':'bg-white border text-slate-600'}`;
             btn.innerText = item.name;
@@ -61,7 +59,6 @@
             };
             tabs.appendChild(btn);
 
-            // Create Sections
             const sec = document.createElement('section');
             sec.id = `S-${item.id}`;
             sec.className = `page-section print-border bg-white rounded-[2.5rem] shadow-xl p-6 mb-10 min-h-[80vh] flex flex-col ${idx===0?'active':''}`;
@@ -69,35 +66,29 @@
             if(item.id === 'cover') {
                 sec.innerHTML = `
                     <div class="flex-grow flex flex-col items-center justify-center text-center space-y-6 border-4 border-double border-purple-200 rounded-[2rem] m-2">
-                        <div class="text-6xl mb-4">🎨</div>
+                        <div class="text-6xl mb-4">✨</div>
                         <h1 class="text-5xl font-black text-slate-900 leading-tight">مدينة الألوان</h1>
                         <p class="text-xl text-purple-600 font-bold italic">مغامرات الغابة الذكية</p>
                         <div class="w-48 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
-                        <p class="text-slate-500 font-bold uppercase tracking-widest text-sm">بصمة المبدعة: نرجس عمران</p>
-                        <button onclick="window.print()" class="no-print mt-8 px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-purple-700 transition">ابدأ الطباعة والتلوين 🖨️</button>
+                        <p class="text-slate-500 font-bold tracking-widest text-sm">بصمة المبدعة: نرجس عمران</p>
+                        <button onclick="window.print()" class="no-print mt-8 px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-purple-700 transition">🖨️ طباعة النسخة الكاملة</button>
                     </div>
                 `;
             } else {
                 sec.innerHTML = `
-                    <div class="flex justify-between items-center mb-6 no-print">
-                        <span class="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-xs font-bold">حرك الماوس لرؤية الألوان ✨</span>
-                        <div class="flex gap-2 text-2xl">📸 🖍️ 🔈</div>
-                    </div>
-                    
                     <div class="text-center mb-4">
                         <h2 class="text-4xl font-black text-slate-800">${item.name}</h2>
                         <p class="animal-title-en text-xl text-slate-400 font-bold uppercase tracking-tighter">${item.en}</p>
                     </div>
 
                     <div class="flex-grow flex items-center justify-center relative border-4 border-dashed border-slate-100 rounded-[2rem] p-4 bg-slate-50">
-                        <img src="${item.img}" class="animal-img" alt="${item.name}">
+                        <img src="${item.img}" class="animal-img" alt="${item.name}" onerror="this.src='https://via.placeholder.com/300?text=يرجى+التأكد+من+اسم+الصورة'">
                         <div class="absolute bottom-4 right-4 bg-white border-2 border-slate-900 px-4 py-1 rounded-full text-[10px] font-bold shadow-sm">
                            🔍 ابحث عن: ${item.search}
                         </div>
                     </div>
 
                     <div class="mt-8 text-center space-y-2">
-                        <p class="text-slate-400 text-[10px] font-bold">تتبع النقاط لتعلم الكتابة:</p>
                         <div class="tracing-dots text-5xl md:text-6xl uppercase inline-block">${item.en}</div>
                     </div>
                 `;
