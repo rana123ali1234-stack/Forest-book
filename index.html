@@ -1,1 +1,109 @@
-<!DOCTYPE html> <html lang="ar" dir="rtl"> <head>     <meta charset="UTF-8">     <meta name="viewport" content="width=device-width, initial-scale=1.0">     <title>مغامرات الغابة الذكية - كتاب تلوين تفاعلي</title>     <script src="https://cdn.tailwindcss.com"></script>     <style>         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Comic+Neue:wght@700&display=swap');                  body {             font-family: 'Cairo', sans-serif;             background-color: #fdfdfd;             color: #1e293b;         }          .page-section { display: none; }         .page-section.active { display: block; animation: fadeIn 0.4s ease-out; }         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }          .animal-title-en { font-family: 'Comic Neue', cursive; }         .tracing-dots { font-family: 'Comic Neue', cursive; color: #cbd5e1; border-bottom: 2px dashed #e2e8f0; letter-spacing: 6px; }          .qr-mock {             background: repeating-conic-gradient(#334155 0% 25%, #fff 0% 50%) 50% / 15px 15px;             border: 4px solid #9333ea;             border-radius: 12px;         }          .no-print { user-select: none; }         @media print {             nav, .no-print, .ai-features { display: none !important; }             .page-section { display: block !important; page-break-after: always; min-height: 100vh; padding: 2rem !important; }             .print-border { border: 2px solid #e2e8f0; border-radius: 2rem; }             .qr-mock { filter: grayscale(1); }         }          .loader {             border: 3px solid #f3f3f3; border-top: 3px solid #9333ea;             border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite;         }         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }     </style> </head> <body class="min-h-screen flex flex-col">      <!-- Navbar -->     <nav class="bg-white shadow-md border-b sticky top-0 z-50 no-print">         <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">             <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">🐾 مغامرات الغابة</h1>             <div class="flex gap-2 overflow-x-auto" id="nav-tabs"></div>         </div>     </nav>      <!-- Main Viewport -->     <main class="flex-grow max-w-5xl mx-auto w-full p-6 sm:p-10" id="main-content"></main>      <script>         const apiKey = ""; // Shared API Key         const animals = [             { id: 'cover', name: 'الغلاف', type: 'special' },             { id: 'how-to', name: 'كيف تستخدم الكتاب؟', type: 'special' },             { id: 'lion', name: 'الأسد', en: 'LION', search: 'عظمة مخفية', detail: 'The King of the Jungle', sound: 'Lion Roar' },             { id: 'elephant', name: 'الفيل', en: 'ELEPHANT', search: 'نملة صغيرة', detail: 'Largest land animal', sound: 'Elephant Trumpet' },             { id: 'giraffe', name: 'الزرافة', en: 'GIRAFFE', search: 'طائر صغير', detail: 'Tallest animal on earth', sound: 'Leaves Munching' },             { id: 'monkey', name: 'القرد', en: 'MONKEY', search: 'موزة سرية', detail: 'Expert climber', sound: 'Monkey Chatter' },             { id: 'owl', name: 'البومة', en: 'OWL', search: 'هلال صغير', detail: 'Night forest keeper', sound: 'Owl Hoot' }         ];          // --- GEMINI FUNCTIONS ---         async function fetchAI(endpoint, payload) {             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${endpoint}?key=${apiKey}`, {                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)             });             return await res.json();         }          async function playSound(text) {             const res = await fetchAI('gemini-2.5-flash-preview-tts:generateContent', {                 contents: [{ parts: [{ text: `Say clearly: ${text}` }] }],                 generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } } }             });             const audioData = res.candidates[0].content.parts[0].inlineData.data;             const audioBlob = pcmToBlob(audioData, 24000);             new Audio(URL.createObjectURL(audioBlob)).play();         }          function pcmToBlob(base64, rate) {             const bin = atob(base64);             const view = new DataView(new ArrayBuffer(44 + bin.length));             const writeStr = (o, s) => { for(let i=0; i<s.length; i++) view.setUint8(o+i, s.charCodeAt(i)); };             writeStr(0, 'RIFF'); view.setUint32(4, 36 + bin.length, true); writeStr(8, 'WAVEfmt ');             view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);             view.setUint32(24, rate, true); view.setUint32(28, rate*2, true); view.setUint16(32, 2, true);             view.setUint16(34, 16, true); writeStr(36, 'data'); view.setUint32(40, bin.length, true);             for(let i=0; i<bin.length; i++) view.setUint8(44+i, bin.charCodeAt(i));             return new Blob([view], {type: 'audio/wav'});         }          async function genFact(name, id) {             const loader = document.getElementById(`L-${id}`);             const box = document.getElementById(`F-${id}`);             loader.style.display = 'block';             const res = await fetchAI('gemini-2.5-flash-preview-09-2025:generateContent', {                 contents: [{ parts: [{ text: `أعطني حقيقة واحدة غريبة جداً ومشوقة للأطفال عن حيوان ${name}. لا تزد عن 15 كلمة.` }] }]             });             box.innerText = res.candidates[0].content.parts[0].text;             box.style.display = 'block';             loader.style.display = 'none';         }          // --- UI RENDER ---         const main = document.getElementById('main-content');         const tabs = document.getElementById('nav-tabs');          animals.forEach((item, idx) => {             // Tab             const btn = document.createElement('button');             btn.className = `px-4 py-2 whitespace-nowrap rounded-lg text-sm font-bold transition ${idx===0?'bg-purple-600 text-white':'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;             btn.innerText = item.name;             btn.onclick = () => {                 document.querySelectorAll('nav button').forEach(b=>b.className='px-4 py-2 whitespace-nowrap rounded-lg text-sm font-bold bg-slate-100 text-slate-600');                 btn.className = 'px-4 py-2 whitespace-nowrap rounded-lg text-sm font-bold bg-purple-600 text-white';                 document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));                 document.getElementById(`S-${item.id}`).classList.add('active');             };             tabs.appendChild(btn);              // Section             const sec = document.createElement('section');             sec.id = `S-${item.id}`;             sec.className = `page-section print-border bg-white rounded-3xl shadow-xl p-8 mb-10 min-h-[85vh] flex flex-col ${idx===0?'active':''}`;              if(item.id === 'cover') {                 sec.innerHTML = `                     <div class="flex-grow flex flex-col items-center justify-center text-center space-y-6">                         <div class="p-8 border-8 border-purple-500 rounded-full bg-purple-50">                             <span class="text-8xl">🦁🐘🐾</span>                         </div>                         <h1 class="text-6xl font-black text-slate-900 leading-tight">مغامرات الغابة</h1>                         <p class="text-2xl text-purple-600 font-bold">كتاب التلوين السحري الذي يتحدث!</p>                         <div class="h-32 w-full border-4 border-dashed border-slate-200 rounded-3xl flex items-center justify-center text-slate-300 italic">                             مساحة لوضع شعار مشروعك نرجس                         </div>                         <p class="text-slate-500">للأطفال المبدعين دون العاشرة</p>                     </div>                 `;             } else if(item.id === 'how-to') {                 sec.innerHTML = `                     <div class="space-y-8">                         <h2 class="text-4xl font-bold text-center text-purple-700">كيف تستخدم كتابك السحري؟</h2>                         <div class="grid md:grid-cols-3 gap-6">                             <div class="bg-blue-50 p-6 rounded-2xl text-center">                                 <span class="text-5xl mb-4 block">🖍️</span>                                 <h3 class="font-bold mb-2">1. لـوّن</h3>                                 <p class="text-sm">استخدم ألوانك المفضلة لتجعل الحيوان يبدو جميلاً.</p>                             </div>                             <div class="bg-purple-50 p-6 rounded-2xl text-center">                                 <span class="text-5xl mb-4 block">📱</span>                                 <h3 class="font-bold mb-2">2. امسـح</h3>                                 <p class="text-sm">وجّه كاميرا الهاتف نحو المربع السحري (QR).</p>                             </div>                             <div class="bg-green-50 p-6 rounded-2xl text-center">                                 <span class="text-5xl mb-4 block">🎧</span>                                 <h3 class="font-bold mb-2">3. اسمـع</h3>                                 <p class="text-sm">سيقوم الكتاب بنطق الاسم وإصدار صوت الحيوان الحقيقي!</p>                             </div>                         </div>                         <div class="mt-8 p-6 border-2 border-purple-100 rounded-2xl bg-slate-50">                             <h4 class="font-bold text-purple-800 mb-2">💡 نصيحة للأهل:</h4>                             <p class="text-slate-700 text-sm leading-relaxed">                                 تحت كل حيوان ستجدون اسمه بالإنجليزية بشكل "منقط". شجعوا الطفل على تتبع الحروف بالقلم ليتعلم الكتابة أثناء التلوين. ابحثوا أيضاً عن العنصر المخفي في كل صفحة لزيادة قوة الملاحظة!                             </p>                         </div>                         <button onclick="window.print()" class="no-print w-full 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مغامرات الغابة الذكية - نرجس عمران</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Comic+Neue:wght@700&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .page-section { display: none; }
+        .page-section.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animal-img { max-height: 350px; object-fit: contain; filter: grayscale(100%) brightness(1.2) contrast(1.1); transition: 0.3s; cursor: pointer; }
+        .animal-img:hover { filter: grayscale(0%); }
+        .tracing-dots { font-family: 'Comic Neue', cursive; color: #cbd5e1; border-bottom: 2px dashed #e2e8f0; letter-spacing: 6px; }
+        @media print {
+            nav, .no-print { display: none !important; }
+            .page-section { display: block !important; page-break-after: always; padding: 1rem !important; }
+            .print-border { border: 2px solid #e2e8f0; border-radius: 2rem; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-50 no-print">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold text-purple-600">🐾 مدينة الألوان</h1>
+                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">إصدار نرجس التعليمي</span>
+            </div>
+            <div class="flex gap-2 overflow-x-auto pb-2" id="nav-tabs"></div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-4xl mx-auto w-full p-4 sm:p-8" id="main-content"></main>
+
+    <script>
+        const animals = [
+            { id: 'cover', name: 'الغلاف', type: 'special' },
+            { id: 'lion', name: 'الأسد', en: 'LION', search: 'عظمة', img: 'https://img.freepik.com/free-vector/cute-lion-cartoon-character_1308-134105.jpg' },
+            { id: 'elephant', name: 'الفيل', en: 'ELEPHANT', search: 'نملة', img: 'https://img.freepik.com/free-vector/cute-elephant-sitting-cartoon-vector-icon-illustration_138676-2213.jpg' },
+            { id: 'giraffe', name: 'الزرافة', en: 'GIRAFFE', search: 'طائر', img: 'https://img.freepik.com/free-vector/cute-giraffe-cartoon-vector-icon-illustration_138676-2484.jpg' },
+            { id: 'monkey', name: 'القرد', en: 'MONKEY', search: 'موزة', img: 'https://img.freepik.com/free-vector/cute-monkey-sitting-cartoon-vector-icon-illustration_138676-2457.jpg' },
+            { id: 'owl', name: 'البومة', en: 'OWL', search: 'هلال', img: 'https://img.freepik.com/free-vector/cute-owl-cartoon-vector-icon-illustration_138676-2311.jpg' }
+        ];
+
+        const main = document.getElementById('main-content');
+        const tabs = document.getElementById('nav-tabs');
+
+        animals.forEach((item, idx) => {
+            // Create Tabs
+            const btn = document.createElement('button');
+            btn.className = `px-4 py-2 whitespace-nowrap rounded-full text-sm font-bold transition ${idx===0?'bg-purple-600 text-white shadow-lg':'bg-white border text-slate-600'}`;
+            btn.innerText = item.name;
+            btn.onclick = () => {
+                document.querySelectorAll('#nav-tabs button').forEach(b=>b.className='px-4 py-2 whitespace-nowrap rounded-full text-sm font-bold bg-white border text-slate-600');
+                btn.className = 'px-4 py-2 whitespace-nowrap rounded-full text-sm font-bold bg-purple-600 text-white shadow-lg';
+                document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
+                document.getElementById(`S-${item.id}`).classList.add('active');
+            };
+            tabs.appendChild(btn);
+
+            // Create Sections
+            const sec = document.createElement('section');
+            sec.id = `S-${item.id}`;
+            sec.className = `page-section print-border bg-white rounded-[2.5rem] shadow-xl p-6 mb-10 min-h-[80vh] flex flex-col ${idx===0?'active':''}`;
+
+            if(item.id === 'cover') {
+                sec.innerHTML = `
+                    <div class="flex-grow flex flex-col items-center justify-center text-center space-y-6 border-4 border-double border-purple-200 rounded-[2rem] m-2">
+                        <div class="text-6xl mb-4">🎨</div>
+                        <h1 class="text-5xl font-black text-slate-900 leading-tight">مدينة الألوان</h1>
+                        <p class="text-xl text-purple-600 font-bold italic">مغامرات الغابة الذكية</p>
+                        <div class="w-48 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
+                        <p class="text-slate-500 font-bold uppercase tracking-widest text-sm">بصمة المبدعة: نرجس عمران</p>
+                        <button onclick="window.print()" class="no-print mt-8 px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-purple-700 transition">ابدأ الطباعة والتلوين 🖨️</button>
+                    </div>
+                `;
+            } else {
+                sec.innerHTML = `
+                    <div class="flex justify-between items-center mb-6 no-print">
+                        <span class="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-xs font-bold">حرك الماوس لرؤية الألوان ✨</span>
+                        <div class="flex gap-2 text-2xl">📸 🖍️ 🔈</div>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <h2 class="text-4xl font-black text-slate-800">${item.name}</h2>
+                        <p class="animal-title-en text-xl text-slate-400 font-bold uppercase tracking-tighter">${item.en}</p>
+                    </div>
+
+                    <div class="flex-grow flex items-center justify-center relative border-4 border-dashed border-slate-100 rounded-[2rem] p-4 bg-slate-50">
+                        <img src="${item.img}" class="animal-img" alt="${item.name}">
+                        <div class="absolute bottom-4 right-4 bg-white border-2 border-slate-900 px-4 py-1 rounded-full text-[10px] font-bold shadow-sm">
+                           🔍 ابحث عن: ${item.search}
+                        </div>
+                    </div>
+
+                    <div class="mt-8 text-center space-y-2">
+                        <p class="text-slate-400 text-[10px] font-bold">تتبع النقاط لتعلم الكتابة:</p>
+                        <div class="tracing-dots text-5xl md:text-6xl uppercase inline-block">${item.en}</div>
+                    </div>
+                `;
+            }
+            main.appendChild(sec);
+        });
+    </script>
+</body>
+</html>
