@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>مرسم نرجس عمران النهائي</title>
+    <title>مرسم نرجس عمران - النسخة النهائية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
@@ -14,60 +14,70 @@
             padding-bottom: 120px; border-bottom: 8px dashed #e2e8f0; position: relative;
         }
 
-        /* تأثير الترحيب عند الوصول للحيوان */
-        .welcome-anim { animation: welcomePulse 1.5s ease-out 2; }
+        /* حركة الترحيب */
+        .welcome-anim { animation: welcomePulse 1.2s ease-out 2; }
         @keyframes welcomePulse {
-            0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.08); filter: brightness(1.2); }
-            100% { transform: scale(1); filter: brightness(1); }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
         }
 
         .canvas-container { 
             position: relative; width: 320px; height: 320px; margin: 15px auto; 
             background: white; border-radius: 40px; border: 10px solid #a855f7; 
-            box-shadow: 0 15px 35px rgba(168, 85, 247, 0.2); overflow: hidden; touch-action: none;
+            box-shadow: 0 15px 35px rgba(168, 85, 247, 0.15); overflow: hidden; touch-action: none;
         }
         canvas { position: absolute; top: 0; left: 0; z-index: 30; cursor: crosshair; }
         .animal-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 10; pointer-events: none; opacity: 0.6; }
 
-        /* ميزة التتبع المنقط الواضحة جداً */
+        /* التتبع المنقط */
         .trace-text { 
-            font-family: 'Courier New', Courier, monospace; font-size: 4rem; 
-            color: transparent; -webkit-text-stroke: 2px #cbd5e1; 
+            font-family: 'Courier New', monospace; font-size: 3.5rem; 
+            color: transparent; -webkit-text-stroke: 1.5px #cbd5e1; 
             font-weight: 900; position: absolute; top: 50%; left: 50%; 
             transform: translate(-50%, -50%); z-index: 5; pointer-events: none;
-            text-transform: uppercase; letter-spacing: 8px;
-            text-decoration: underline dotted #cbd5e1;
+            letter-spacing: 5px; text-decoration: underline dotted #cbd5e1;
         }
 
-        .toolbar { display: flex; justify-content: center; gap: 12px; background: rgba(255,255,255,0.9); padding: 18px; border-top: 2px solid #f3e8ff; position: fixed; bottom: 0; width: 100%; z-index: 100; backdrop-filter: blur(10px); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
-        .dot { width: 46px; height: 46px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.3s; }
-        .active-dot { border-color: #a855f7; transform: translateY(-8px) scale(1.1); }
+        /* الاسم الكبير في الفراغ */
+        .big-trace-name {
+            font-family: 'Courier New', monospace; font-size: 4.2rem;
+            color: #f8fafc; -webkit-text-stroke: 2px #cbd5e1;
+            font-weight: 900; letter-spacing: 8px; margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .toolbar { display: flex; justify-content: center; gap: 12px; background: rgba(255,255,255,0.95); padding: 18px; border-top: 2px solid #f3e8ff; position: fixed; bottom: 0; width: 100%; z-index: 100; backdrop-filter: blur(8px); }
+        .dot { width: 45px; height: 45px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .active-dot { border-color: #a855f7; transform: translateY(-5px) scale(1.1); }
         .hidden-box { display: none; }
     </style>
 </head>
-<body>
+<body onload="init()">
 
-    <section class="page-view text-center bg-gradient-to-b from-purple-50 to-white">
+    <section class="page-view text-center bg-purple-50">
         <div class="my-auto">
-            <h1 class="text-5xl font-black text-purple-700 mb-4">مرسم الغابة</h1>
-            <p class="text-xl font-bold text-purple-400 mb-8 underline">نرجس عمران</p>
-            <img src="https://img.freepik.com/free-vector/wild-animals-coloring-page_23-2148854378.jpg" class="w-72 mx-auto rounded-full shadow-2xl welcome-anim">
-            <p class="mt-12 animate-bounce text-2xl">اسحب للأعلى 👇</p>
+            <h1 class="text-5xl font-black text-purple-700 mb-2 uppercase italic">Narjes Omran</h1>
+            <h2 class="text-3xl font-bold text-purple-400 mb-8">مرسم الغابة الذكي</h2>
+            <img src="https://img.freepik.com/free-vector/wild-animals-coloring-page_23-2148854378.jpg" class="w-72 mx-auto rounded-3xl shadow-2xl welcome-anim mb-10">
+            <p class="animate-bounce text-xl text-gray-400 font-bold uppercase tracking-widest">Swipe Up</p>
         </div>
     </section>
 
     <section class="page-view text-center px-8">
         <div class="my-auto">
-            <h2 class="text-3xl font-black mb-10 text-purple-600 border-b-4 border-purple-200 inline-block">دليل الرسام المبدع</h2>
-            <div class="space-y-6 text-right">
-                <div class="bg-white p-5 rounded-3xl shadow-md border-r-8 border-purple-500">
-                    <p class="font-black text-lg">✍️ تتبع الحروف المنقطة</p>
-                    <p class="text-gray-500 text-sm">مرر إصبعك فوق الحروف الإنجليزية لتتعلم كتابتها.</p>
+            <h2 class="text-3xl font-black mb-8 text-purple-600 border-b-4 border-purple-200 inline-block">كيف نلعب؟ 📖</h2>
+            <div class="space-y-4 text-right">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border-r-8 border-purple-500">
+                    <p class="font-bold text-purple-700 text-lg">🖌️ لون وتتبع</p>
+                    <p class="text-gray-400 text-sm">استخدم الريشة لتلوين الحيوان وتتبع اسمه المنقّط.</p>
                 </div>
-                <div class="bg-white p-5 rounded-3xl shadow-md border-r-8 border-blue-500">
-                    <p class="font-black text-lg">🔈 اسمع النطق</p>
-                    <p class="text-gray-500 text-sm">اضغط على السماعة لتسمع اسم الحيوان بالإنجليزية.</p>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border-r-8 border-orange-400">
+                    <p class="font-bold text-orange-600 text-lg">🔍 ابحث عن العنصر الخفي</p>
+                    <p class="text-gray-400 text-sm">استخدم المكبرة لتجد العنصر المفقود داخل الصورة.</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border-r-8 border-yellow-400">
+                    <p class="font-bold text-yellow-600 text-lg">🌟 تعلم الحقائق السحرية</p>
+                    <p class="text-gray-400 text-sm">اضغط على النجوم لتتعلم معلومات غنية عن الحيوان.</p>
                 </div>
             </div>
         </div>
@@ -77,20 +87,13 @@
 
     <section class="page-view text-center bg-purple-50 px-8">
         <div class="my-auto">
-            <h2 class="text-7xl mb-6">🎉</h2>
-            <h3 class="text-3xl font-black mb-8 text-purple-700">أنت فنان مذهل!</h3>
-            
-            <div id="song-box" class="hidden-box bg-white p-6 rounded-3xl shadow-inner mb-6 border-2 border-purple-200">
-                <p class="text-purple-800 font-black mb-3 text-lg">كلمات الأغنية:</p>
-                <p class="italic text-gray-600">الألوان جميلة.. والحيوانات سعيدة.. الرسم مع نرجس هو الأجمل!</p>
-                <p class="text-xs text-gray-400 mt-2 uppercase">Colors are bright, animals are happy!</p>
+            <h2 class="text-7xl mb-6">🏆</h2>
+            <h3 class="text-2xl font-black mb-8 text-purple-700 italic">CREATIVE ARTIST</h3>
+            <button onclick="showSong()" class="bg-purple-600 text-white w-full py-6 rounded-3xl font-bold shadow-2xl text-xl mb-10">🎶 اسمع أغنية نرجس 🎶</button>
+            <div id="song-box" class="hidden-box bg-white p-4 rounded-2xl mb-6 border-2 border-purple-200 italic text-sm">
+                "الألوان ممتعة، والحيوانات تحبك.. التلوين مع نرجس عمران هو الأجمل!"
             </div>
-
-            <button onclick="showSong()" class="bg-purple-600 text-white w-full py-6 rounded-full font-bold shadow-2xl text-xl">🎶 اسمع أغنية نرجس 🎶</button>
-            
-            <div class="mt-10 bg-white p-5 rounded-3xl shadow-xl inline-block">
-                <img src="chrome_qrcode_1776215174727.png" class="w-32 mx-auto">
-            </div>
+            <img src="chrome_qrcode_1776215174727.png" class="w-32 mx-auto bg-white p-3 rounded-2xl shadow-lg">
         </div>
     </section>
 
@@ -117,39 +120,40 @@
             const container = document.getElementById('animal-pages');
             bookData.forEach((p, i) => {
                 const sec = document.createElement('section');
-                sec.className = 'page-view';
+                sec.className = 'page-view text-center';
                 sec.innerHTML = `
-                    <div class="p-5 flex justify-between items-center bg-white shadow-sm sticky top-0 z-50">
-                        <h2 class="text-3xl font-black text-purple-700">${p.name}</h2>
-                        <button onclick="talk('${p.en}', 'en-US')" class="bg-purple-100 p-3 rounded-full text-3xl shadow-inner">🔈</button>
+                    <div class="p-4 flex justify-between items-center bg-white shadow-sm sticky top-0 z-50">
+                        <h2 class="text-2xl font-black text-purple-700">${p.name}</h2>
+                        <button onclick="talk('${p.en}', 'en-US')" class="bg-purple-100 p-2 rounded-full text-2xl">🔈</button>
                     </div>
-                    <div id="box-${i}" class="canvas-container">
+                    
+                    <div class="canvas-container">
                         <div class="trace-text">${p.en}</div>
                         <img src="${p.img}" class="animal-img">
                         <canvas id="canvas-${i}" width="320" height="320"></canvas>
                     </div>
-                    <div class="text-center px-8 mt-6">
-                        <div class="bg-orange-100 text-orange-600 p-3 rounded-2xl font-black mb-4 italic">🔍 ابحث عن: ${p.search}</div>
-                        <div id="fact-${i}" class="hidden-box bg-purple-100 p-4 rounded-3xl border-2 border-purple-200 mb-4 animate-bounce">
-                            <p class="text-purple-900 font-bold">${p.factAr}</p>
-                            <p class="text-purple-400 text-xs italic mt-1 uppercase">${p.factEn}</p>
+
+                    <div class="px-6">
+                        <div class="bg-orange-50 text-orange-600 p-2 rounded-xl font-bold mb-2 text-xs italic">🔍 ابحث عن: ${p.search}</div>
+                        <div class="big-trace-name mb-4">${p.en}</div>
+                        <div id="fact-${i}" class="hidden-box bg-purple-50 p-3 rounded-2xl border border-purple-200 mb-4 animate-bounce text-right">
+                            <p class="text-purple-800 text-sm font-bold">🌟 ${p.factAr}</p>
+                            <p class="text-gray-400 text-[10px] italic uppercase mt-1">${p.factEn}</p>
                         </div>
-                        <button onclick="showFact(${i}, '${p.factEn}')" class="bg-purple-600 text-white px-10 py-4 rounded-full font-black shadow-xl text-sm">✨ اضغط للحقائق ✨</button>
+                        <button onclick="showFact(${i}, '${p.factEn}')" class="bg-purple-600 text-white px-8 py-3 rounded-full font-bold shadow-lg text-xs">🌟 الحقائق السحرية 🌟</button>
                     </div>
                 `;
                 container.appendChild(sec);
                 setupCanvas(i);
             });
 
-            // تفعيل حركة الترحيب عند السحب (Scroll)
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) entry.target.classList.add('welcome-anim');
                     else entry.target.classList.remove('welcome-anim');
                 });
-            }, { threshold: 0.6 });
-
-            document.querySelectorAll('.canvas-container').forEach(box => observer.observe(box));
+            }, { threshold: 0.5 });
+            document.querySelectorAll('.canvas-container').forEach(c => observer.observe(c));
         }
 
         function setupCanvas(idx) {
@@ -217,8 +221,6 @@
             s.lang = lang; s.rate = 0.8;
             window.speechSynthesis.speak(s);
         }
-
-        window.onload = init;
     </script>
 </body>
 </html>
