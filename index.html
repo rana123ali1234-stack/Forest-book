@@ -3,173 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>مرسم نرجس عمران المطور</title>
+    <title>كتاب نرجس الملون</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        body { font-family: 'Cairo', sans-serif; background: #fafafa; overflow: hidden; touch-action: none; }
-        .section-view { display: none; height: 100vh; flex-direction: column; }
-        .section-view.active { display: flex; }
+        body { font-family: 'Cairo', sans-serif; background: #fdfcfe; overflow: hidden; touch-action: none; }
+        .page-view { display: none; height: 100vh; flex-direction: column; }
+        .page-view.active { display: flex; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* منطقة الرسم - محصنة */
-        .paint-area { 
-            position: relative; width: 300px; height: 300px; margin: 15px auto; 
-            background: white; border-radius: 25px; border: 6px solid #a855f7; 
-            overflow: hidden; touch-action: none;
+        /* حركة النبض والترحيب */
+        .welcome-jump { animation: jump-once 0.8s ease-out; }
+        @keyframes jump-once { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1) translateY(-10px); } }
+
+        .canvas-box { 
+            position: relative; width: 300px; height: 300px; margin: 10px auto; 
+            background: white; border-radius: 25px; border: 6px solid #a855f7; overflow: hidden;
         }
         canvas { position: absolute; top: 0; left: 0; z-index: 30; touch-action: none; background: transparent; }
-        .animal-template { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 10; pointer-events: none; opacity: 0.5; }
+        .animal-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 10; pointer-events: none; opacity: 0.6; }
 
-        /* الألوان - واضحة جداً */
-        .tools-bar { 
-            display: flex; justify-content: center; gap: 12px; background: white; 
-            padding: 20px; border-top: 3px solid #f3e8ff; position: fixed; bottom: 0; width: 100%; z-index: 100; 
-        }
-        .dot { width: 45px; height: 45px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .dot.selected { border-color: #a855f7; transform: scale(1.1); }
-        .nav-link { padding: 10px 18px; border-radius: 25px; font-size: 13px; font-weight: bold; background: #eee; white-space: nowrap; transition: 0.3s; }
-        .nav-link.active-tab { background: #a855f7; color: white; box-shadow: 0 4px 10px rgba(168, 85, 247, 0.3); }
+        .palette-bar { display: flex; justify-content: center; gap: 10px; background: white; padding: 15px; border-top: 2px solid #f3e8ff; position: fixed; bottom: 0; width: 100%; z-index: 100; }
+        .color-dot { width: 40px; height: 40px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .color-dot.active-clr { border-color: #a855f7; transform: scale(1.1); }
+        .nav-link { padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #f3f4f6; white-space: nowrap; }
+        .nav-link.tab-on { background: #a855f7; color: white; }
     </style>
 </head>
 <body onload="initApp()">
 
-    <nav class="bg-white p-4 shadow-md sticky top-0 z-[110]">
-        <div class="flex justify-between items-center mb-3 text-purple-700">
-            <h1 class="text-xl font-black">🎨 مرسم نرجس عمران</h1>
-        </div>
-        <div id="tab-list" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
+    <nav class="bg-white p-3 shadow-sm sticky top-0 z-[110]">
+        <div id="tab-row" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
     </nav>
 
-    <main id="view-container" class="flex-grow pb-32"></main>
+    <main id="app-container" class="flex-grow"></main>
 
-    <div id="paint-tools" class="tools-bar shadow-2xl">
-        <button class="dot bg-red-500 selected" onclick="pickColor('#ef4444', this)"></button>
-        <button class="dot bg-blue-500" onclick="pickColor('#3b82f6', this)"></button>
-        <button class="dot bg-yellow-400" onclick="pickColor('#facc15', this)"></button>
-        <button class="dot bg-green-500" onclick="pickColor('#22c55e', this)"></button>
-        <button class="text-3xl px-2" onclick="setEraserMode()">🧽</button>
-        <button class="text-3xl px-2" onclick="clearBoard()">🗑️</button>
+    <div id="paint-tools" class="palette-bar">
+        <button class="color-dot bg-red-500 active-clr" onclick="setColor('#ef4444', this)"></button>
+        <button class="color-dot bg-blue-500" onclick="setColor('#3b82f6', this)"></button>
+        <button class="color-dot bg-yellow-400" onclick="setColor('#facc15', this)"></button>
+        <button class="color-dot bg-green-500" onclick="setColor('#22c55e')"></button>
+        <button class="text-2xl" onclick="setEraser()">🧽</button>
+        <button class="text-2xl" onclick="clearAll()">🗑️</button>
+        <button class="bg-purple-100 px-4 py-1 rounded-xl text-purple-700 font-bold text-xs" onclick="goNext()">التالي ➔</button>
     </div>
 
     <script>
-        const qrCodeFile = "chrome_qrcode_1776215174727.png";
-        let penColor = '#ef4444';
-        let isEraser = false;
-        let activeCtx, activeCanvas;
+        const qrPath = "chrome_qrcode_1776215174727.png";
+        let curColor = '#ef4444', isErase = false, activeCtx;
+        let currentIndex = 0;
 
-        const menuData = [
-            { id: 'start', title: '🏠 الغلاف' },
-            { id: 'lion', title: 'الأسد', en: 'LION', search: 'العظمة', img: 'Screenshot_20260414-182747_Chrome.jpg', info: 'الأسد ملك الغابة القوي' },
-            { id: 'owl', title: 'البومة', en: 'OWL', search: 'الهلال', img: 'Screenshot_20260414-212533_Chrome.jpg', info: 'البومة تسهر في الليل الجميل' },
-            { id: 'elephant', title: 'الفيل', en: 'ELEPHANT', search: 'النملة', img: 'Screenshot_20260414-213329_Chrome.jpg', info: 'الفيل يمتلك ذاكرة قوية جداً' },
-            { id: 'win', title: '🎁 الهدية' }
+        const pages = [
+            { id: 'cover', name: '🏠 البداية' },
+            { id: 'lion', name: 'الأسد', en: 'LION', search: 'العظمة', img: 'Screenshot_20260414-182747_Chrome.jpg', info: 'الأسد هو ملك الغابة وزئيره قوي جداً' },
+            { id: 'owl', name: 'البومة', en: 'OWL', search: 'الهلال', img: 'Screenshot_20260414-212533_Chrome.jpg', info: 'البومة ترى في الظلام وتراقب الغابة' },
+            { id: 'elephant', name: 'الفيل', en: 'ELEPHANT', search: 'النملة', img: 'Screenshot_20260414-213329_Chrome.jpg', info: 'الفيل لديه ذاكرة قوية ويحب أصدقاءه' },
+            { id: 'monkey', name: 'القرد', en: 'MONKEY', search: 'الموزة', img: 'Screenshot_20260414-221054_Chrome.jpg', info: 'القرد ذكي جداً ويحب القفز والمرح' },
+            { id: 'giraffe', name: 'الزرافة', en: 'GIRAFFE', search: 'العصفورة', img: 'images.jpeg', info: 'الزرافة هي أطول حيوان في العالم' },
+            { id: 'gift', name: '🎁 الهدية' }
         ];
 
         function initApp() {
-            const tabs = document.getElementById('tab-list');
-            const container = document.getElementById('view-container');
+            const tabs = document.getElementById('tab-row');
+            const main = document.getElementById('app-container');
 
-            menuData.forEach((item, idx) => {
-                // إنشاء أزرار التبويب
+            pages.forEach((p, i) => {
                 const btn = document.createElement('button');
-                btn.className = `nav-link ${idx === 0 ? 'active-tab' : ''}`;
-                btn.innerText = item.title;
-                btn.id = 'tab-btn-' + item.id;
-                btn.onclick = () => switchSection(item.id);
+                btn.className = `nav-link ${i===0?'tab-on':''}`;
+                btn.innerText = p.name;
+                btn.id = 't-'+p.id;
+                btn.onclick = () => showPage(i);
                 tabs.appendChild(btn);
 
-                // إنشاء الصفحات
                 const sec = document.createElement('section');
-                sec.id = 'view-' + item.id;
-                sec.className = `section-view ${idx === 0 ? 'active' : ''}`;
+                sec.id = 'p-'+p.id;
+                sec.className = `page-view ${i===0?'active':''}`;
 
-                if(item.id === 'start') {
-                    sec.innerHTML = `<div class="text-center p-8 my-auto">
-                        <h2 class="text-4xl font-black text-gray-800 mb-6">مغامرة الغابة</h2>
-                        <img src="https://img.freepik.com/free-vector/hand-drawn-jungle-background_23-2148130039.jpg" class="rounded-3xl shadow-xl border-4 border-white mb-6">
-                        <p class="text-purple-600 font-bold text-xl">ابدأ التلوين الآن! 🎨</p>
-                    </div>`;
-                } else if(item.id === 'win') {
-                    sec.innerHTML = `<div class="text-center p-8 my-auto">
-                        <h2 class="text-4xl font-black mb-8">أنت فنان مبدع!</h2>
-                        <button onclick="playVoice('Excellent job, you are a great artist', 'en-US')" class="bg-purple-600 text-white p-5 rounded-2xl w-full text-xl font-bold shadow-lg">اسمع رسالة نرجس 🎁</button>
-                        <img src="${qrCodeFile}" class="w-40 mx-auto mt-12 rounded-xl shadow-md border">
-                    </div>`;
+                if(p.id === 'cover') {
+                    sec.innerHTML = `<div class="text-center p-6 my-auto"><h1 class="text-3xl font-black mb-4">حيوانات الغابة</h1><img src="https://img.freepik.com/free-vector/jungle-landscape-with-wild-animals_23-2148130040.jpg" class="rounded-3xl mb-6 shadow-lg border-4 border-white"><p class="text-purple-600 font-bold italic">تصميم المبدعة نرجس عمران</p></div>`;
+                } else if(p.id === 'gift') {
+                    sec.innerHTML = `<div class="text-center p-6 my-auto"><h2 class="text-4xl mb-6">🎁</h2><h3 class="text-2xl font-bold mb-6 text-purple-700">عمل رائع يا بطل!</h3><button onclick="speak('Great job, we are proud of you', 'en-US')" class="bg-purple-600 text-white p-4 rounded-2xl w-full font-bold shadow-lg">اسمع رسالة المحبة ❤️</button><img src="${qrPath}" class="w-32 mx-auto mt-10 rounded shadow border"></div>`;
                 } else {
                     sec.innerHTML = `
                         <div class="p-4 flex justify-between items-center">
-                            <h3 class="text-3xl font-black text-gray-800">${item.title}</h3>
-                            <button onclick="playVoice('${item.en}', 'en-US')" class="bg-purple-100 p-3 rounded-full text-2xl shadow-sm">🔈</button>
+                            <div><h2 class="text-2xl font-black text-gray-800">${p.name}</h2><p class="text-purple-400 text-xs font-bold uppercase">${p.en}</p></div>
+                            <button onclick="speak('${p.en}', 'en-US')" class="bg-purple-600 text-white w-10 h-10 rounded-full shadow text-sm">🔈</button>
                         </div>
-                        <div class="paint-area">
-                            <img src="${item.img}" class="animal-template">
-                            <canvas id="canv-${item.id}" width="300" height="300"></canvas>
+                        <div class="canvas-box" id="box-${p.id}">
+                            <img src="${p.img}" class="animal-bg">
+                            <canvas id="c-${p.id}" width="300" height="300"></canvas>
                         </div>
                         <div class="text-center px-4">
-                            <div class="bg-orange-50 text-orange-600 py-2 rounded-xl font-bold mb-3 border border-orange-100">🔍 ابحث عن: ${item.search}</div>
-                            <button onclick="playVoice('${item.info}', 'ar-SA')" class="text-purple-600 font-bold underline decoration-wavy">اسمع الحقيقة السحرية ✨</button>
+                            <div class="bg-orange-50 text-orange-600 py-1 rounded-xl font-bold mb-2 text-sm">🔍 ابحث عن: ${p.search}</div>
+                            <div id="txt-${p.id}" class="hidden bg-purple-50 p-2 rounded-lg text-purple-800 text-xs font-bold mb-2"></div>
+                            <button onclick="showFact('${p.id}', '${p.info}')" class="text-purple-600 font-bold underline text-sm">✨ اسمع الحقيقة السحرية</button>
                         </div>`;
                 }
-                container.appendChild(sec);
+                main.appendChild(sec);
             });
-            switchSection('start');
+            showPage(0);
         }
 
-        function switchSection(id) {
-            document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active-tab'));
+        function showPage(idx) {
+            currentIndex = idx;
+            document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('tab-on'));
             
-            document.getElementById('view-' + id).classList.add('active');
-            document.getElementById('tab-btn-' + id).classList.add('active-tab');
+            const p = pages[idx];
+            document.getElementById('p-'+p.id).classList.add('active');
+            document.getElementById('t-'+p.id).classList.add('tab-on');
             
-            document.getElementById('paint-tools').style.display = (id === 'start' || id === 'win') ? 'none' : 'flex';
+            document.getElementById('paint-tools').style.display = (p.id==='cover'||p.id==='gift')?'none':'flex';
             
-            if(id !== 'start' && id !== 'win') startDrawing('canv-' + id);
+            if(p.id!=='cover' && p.id!=='gift') {
+                const box = document.getElementById('box-'+p.id);
+                box.classList.remove('welcome-jump');
+                void box.offsetWidth; 
+                box.classList.add('welcome-jump');
+                initCanvas('c-'+p.id);
+            }
         }
 
-        function startDrawing(cId) {
-            activeCanvas = document.getElementById(cId);
-            activeCtx = activeCanvas.getContext('2d');
+        function goNext() {
+            let next = currentIndex + 1;
+            if(next >= pages.length) next = 0;
+            showPage(next);
+        }
+
+        function initCanvas(cid) {
+            const canv = document.getElementById(cid);
+            activeCtx = canv.getContext('2d');
             activeCtx.lineCap = 'round';
-            activeCtx.lineWidth = 14;
+            activeCtx.lineWidth = 12;
 
-            const handleDraw = (e) => {
+            const draw = (e) => {
                 if(e.buttons !== 1 && e.type !== 'touchmove') return;
-                const rect = activeCanvas.getBoundingClientRect();
-                const x = (e.clientX || e.touches[0].clientX) - rect.left;
-                const y = (e.clientY || e.touches[0].clientY) - rect.top;
-                
-                activeCtx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
-                activeCtx.strokeStyle = penColor;
-                activeCtx.lineTo(x, y);
-                activeCtx.stroke();
-                activeCtx.beginPath();
-                activeCtx.moveTo(x, y);
+                const r = canv.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - r.left;
+                const y = (e.clientY || e.touches[0].clientY) - r.top;
+                activeCtx.globalCompositeOperation = isErase?'destination-out':'source-over';
+                activeCtx.strokeStyle = curColor;
+                activeCtx.lineTo(x, y); activeCtx.stroke();
+                activeCtx.beginPath(); activeCtx.moveTo(x, y);
             };
 
-            activeCanvas.onmousedown = (e) => { activeCtx.beginPath(); handleDraw(e); };
-            activeCanvas.onmousemove = handleDraw;
-            activeCanvas.ontouchstart = (e) => { e.preventDefault(); activeCtx.beginPath(); handleDraw(e); };
-            activeCanvas.ontouchmove = (e) => { e.preventDefault(); handleDraw(e); };
+            canv.onmousedown = (e) => { activeCtx.beginPath(); draw(e); };
+            canv.onmousemove = draw;
+            canv.ontouchstart = (e) => { e.preventDefault(); activeCtx.beginPath(); draw(e); };
+            canv.ontouchmove = (e) => { e.preventDefault(); draw(e); };
         }
 
-        function pickColor(c, btn) {
-            isEraser = false; penColor = c;
-            document.querySelectorAll('.dot').forEach(d => d.classList.remove('selected'));
-            btn.classList.add('selected');
-            // تنشيط الصوت للسامسونج
+        function showFact(id, msg) {
+            const el = document.getElementById('txt-'+id);
+            el.innerText = msg;
+            el.classList.remove('hidden');
+            speak(msg, 'ar-SA');
+        }
+
+        function setColor(c, btn) {
+            isErase = false; curColor = c;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active-clr'));
+            if(btn) btn.classList.add('active-clr');
             window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
         }
 
-        function setEraserMode() { isEraser = true; document.querySelectorAll('.dot').forEach(d => d.classList.remove('selected')); }
-        function clearBoard() { if(activeCtx) activeCtx.clearRect(0, 0, 300, 300); }
+        function setEraser() { isErase = true; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active-clr')); }
+        function clearAll() { if(activeCtx) activeCtx.clearRect(0,0,300,300); }
 
-        function playVoice(msg, lang) {
+        function speak(t, l) {
             window.speechSynthesis.cancel();
-            const speech = new SpeechSynthesisUtterance(msg);
-            speech.lang = lang;
-            speech.rate = 0.8;
-            window.speechSynthesis.speak(speech);
+            const s = new SpeechSynthesisUtterance(t);
+            s.lang = l; s.rate = 0.8;
+            window.speechSynthesis.speak(s);
         }
     </script>
 </body>
