@@ -3,160 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>مرسم نرجس عمران</title>
+    <title>مرسم نرجس عمران المطور</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        body { font-family: 'Cairo', sans-serif; background: #fdfcfe; overflow: hidden; touch-action: none; }
-        .page-section { display: none; }
-        .active { display: flex !important; flex-direction: column; }
+        body { font-family: 'Cairo', sans-serif; background: #fafafa; overflow: hidden; touch-action: none; }
+        .section-view { display: none; height: 100vh; flex-direction: column; }
+        .section-view.active { display: flex; }
         
-        /* منطقة الرسم */
-        .canvas-wrapper { position: relative; width: 300px; height: 300px; margin: 10px auto; background: white; border-radius: 20px; border: 5px solid #9333ea; overflow: hidden; }
-        canvas { position: absolute; top: 0; left: 0; z-index: 20; touch-action: none; }
-        .bg-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 10; pointer-events: none; opacity: 0.6; }
+        /* منطقة الرسم - محصنة */
+        .paint-area { 
+            position: relative; width: 300px; height: 300px; margin: 15px auto; 
+            background: white; border-radius: 25px; border: 6px solid #a855f7; 
+            overflow: hidden; touch-action: none;
+        }
+        canvas { position: absolute; top: 0; left: 0; z-index: 30; touch-action: none; background: transparent; }
+        .animal-template { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 10; pointer-events: none; opacity: 0.5; }
 
-        /* الألوان */
-        .palette { display: flex; justify-content: center; gap: 10px; background: white; padding: 15px; border-top: 2px solid #f3e8ff; position: fixed; bottom: 0; width: 100%; z-index: 50; }
-        .color-btn { width: 40px; height: 40px; border-radius: 50%; border: 3px solid #eee; }
-        .selected { border-color: #9333ea; transform: scale(1.1); }
-        .nav-btn { padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #f3f4f6; white-space: nowrap; }
-        .nav-active { background: #9333ea; color: white; }
+        /* الألوان - واضحة جداً */
+        .tools-bar { 
+            display: flex; justify-content: center; gap: 12px; background: white; 
+            padding: 20px; border-top: 3px solid #f3e8ff; position: fixed; bottom: 0; width: 100%; z-index: 100; 
+        }
+        .dot { width: 45px; height: 45px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .dot.selected { border-color: #a855f7; transform: scale(1.1); }
+        .nav-link { padding: 10px 18px; border-radius: 25px; font-size: 13px; font-weight: bold; background: #eee; white-space: nowrap; transition: 0.3s; }
+        .nav-link.active-tab { background: #a855f7; color: white; box-shadow: 0 4px 10px rgba(168, 85, 247, 0.3); }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body onload="initApp()">
 
-    <nav class="p-4 bg-white shadow-sm sticky top-0 z-50">
-        <div class="flex justify-between items-center mb-3">
-            <h1 class="text-xl font-black text-purple-600">🎨 مرسم حيوانات الغابة</h1>
+    <nav class="bg-white p-4 shadow-md sticky top-0 z-[110]">
+        <div class="flex justify-between items-center mb-3 text-purple-700">
+            <h1 class="text-xl font-black">🎨 مرسم نرجس عمران</h1>
         </div>
-        <div id="tabs" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"></div>
+        <div id="tab-list" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
     </nav>
 
-    <main id="pages" class="flex-grow p-4"></main>
+    <main id="view-container" class="flex-grow pb-32"></main>
 
-    <div id="controls" class="palette shadow-lg">
-        <button class="color-btn bg-red-500" onclick="setPaint('#ef4444', this)"></button>
-        <button class="color-btn bg-blue-500" onclick="setPaint('#3b82f6', this)"></button>
-        <button class="color-btn bg-yellow-400" onclick="setPaint('#facc15', this)"></button>
-        <button class="color-btn bg-green-500" onclick="setPaint('#22c55e', this)"></button>
-        <button class="color-btn bg-orange-500" onclick="setPaint('#f97316', this)"></button>
-        <button class="text-2xl px-2" onclick="setEraser()">🧽</button>
-        <button class="text-2xl px-2" onclick="resetCanvas()">🗑️</button>
+    <div id="paint-tools" class="tools-bar shadow-2xl">
+        <button class="dot bg-red-500 selected" onclick="pickColor('#ef4444', this)"></button>
+        <button class="dot bg-blue-500" onclick="pickColor('#3b82f6', this)"></button>
+        <button class="dot bg-yellow-400" onclick="pickColor('#facc15', this)"></button>
+        <button class="dot bg-green-500" onclick="pickColor('#22c55e', this)"></button>
+        <button class="text-3xl px-2" onclick="setEraserMode()">🧽</button>
+        <button class="text-3xl px-2" onclick="clearBoard()">🗑️</button>
     </div>
 
     <script>
-        const qrImg = "chrome_qrcode_1776215174727.png";
-        let activeColor = '#ef4444';
+        const qrCodeFile = "chrome_qrcode_1776215174727.png";
+        let penColor = '#ef4444';
         let isEraser = false;
-        let ctx, canvas;
+        let activeCtx, activeCanvas;
 
-        const data = [
-            { id: 'home', name: '🏠 البداية' },
-            { id: 'lion', name: 'الأسد', en: 'LION', search: 'العظمة', img: 'Screenshot_20260414-182747_Chrome.jpg', fact: 'الأسد هو ملك الغابة القوي' },
-            { id: 'owl', name: 'البومة', en: 'OWL', search: 'الهلال', img: 'Screenshot_20260414-212533_Chrome.jpg', fact: 'البومة تسهر في الليل' },
-            { id: 'elephant', name: 'الفيل', en: 'ELEPHANT', search: 'النملة', img: 'Screenshot_20260414-213329_Chrome.jpg', fact: 'الفيل لديه خرطوم طويل' },
-            { id: 'gift', name: '🎁 هدية' }
+        const menuData = [
+            { id: 'start', title: '🏠 الغلاف' },
+            { id: 'lion', title: 'الأسد', en: 'LION', search: 'العظمة', img: 'Screenshot_20260414-182747_Chrome.jpg', info: 'الأسد ملك الغابة القوي' },
+            { id: 'owl', title: 'البومة', en: 'OWL', search: 'الهلال', img: 'Screenshot_20260414-212533_Chrome.jpg', info: 'البومة تسهر في الليل الجميل' },
+            { id: 'elephant', title: 'الفيل', en: 'ELEPHANT', search: 'النملة', img: 'Screenshot_20260414-213329_Chrome.jpg', info: 'الفيل يمتلك ذاكرة قوية جداً' },
+            { id: 'win', title: '🎁 الهدية' }
         ];
 
-        function init() {
-            const tabContainer = document.getElementById('tabs');
-            const pageContainer = document.getElementById('pages');
+        function initApp() {
+            const tabs = document.getElementById('tab-list');
+            const container = document.getElementById('view-container');
 
-            data.forEach((item, index) => {
-                // إنشاء الأزرار
+            menuData.forEach((item, idx) => {
+                // إنشاء أزرار التبويب
                 const btn = document.createElement('button');
-                btn.className = `nav-btn ${index === 0 ? 'nav-active' : ''}`;
-                btn.innerText = item.name;
-                btn.id = 't-' + item.id;
-                btn.onclick = () => showPage(item.id);
-                tabContainer.appendChild(btn);
+                btn.className = `nav-link ${idx === 0 ? 'active-tab' : ''}`;
+                btn.innerText = item.title;
+                btn.id = 'tab-btn-' + item.id;
+                btn.onclick = () => switchSection(item.id);
+                tabs.appendChild(btn);
 
                 // إنشاء الصفحات
-                const div = document.createElement('div');
-                div.id = 'p-' + item.id;
-                div.className = `page-section h-full ${index === 0 ? 'active' : ''}`;
+                const sec = document.createElement('section');
+                sec.id = 'view-' + item.id;
+                sec.className = `section-view ${idx === 0 ? 'active' : ''}`;
 
-                if(item.id === 'home') {
-                    div.innerHTML = `<div class="text-center my-auto"><h2 class="text-3xl font-bold mb-4">أهلاً بك يا فنان!</h2><img src="https://img.freepik.com/free-vector/jungle-landscape-with-wild-animals_23-2148130040.jpg" class="rounded-2xl shadow mb-4"><p class="text-purple-600 font-bold">بصمة المبدعة: نرجس عمران</p></div>`;
-                } else if(item.id === 'gift') {
-                    div.innerHTML = `<div class="text-center my-auto"><h2 class="text-3xl font-black mb-6">أنت رائع!</h2><button onclick="talk('Excellent work my little hero', 'en-US')" class="bg-purple-600 text-white p-4 rounded-2xl w-full font-bold">اسمع رسالة الهدية 🎁</button><img src="${qrImg}" class="w-32 mx-auto mt-10 rounded shadow"></div>`;
+                if(item.id === 'start') {
+                    sec.innerHTML = `<div class="text-center p-8 my-auto">
+                        <h2 class="text-4xl font-black text-gray-800 mb-6">مغامرة الغابة</h2>
+                        <img src="https://img.freepik.com/free-vector/hand-drawn-jungle-background_23-2148130039.jpg" class="rounded-3xl shadow-xl border-4 border-white mb-6">
+                        <p class="text-purple-600 font-bold text-xl">ابدأ التلوين الآن! 🎨</p>
+                    </div>`;
+                } else if(item.id === 'win') {
+                    sec.innerHTML = `<div class="text-center p-8 my-auto">
+                        <h2 class="text-4xl font-black mb-8">أنت فنان مبدع!</h2>
+                        <button onclick="playVoice('Excellent job, you are a great artist', 'en-US')" class="bg-purple-600 text-white p-5 rounded-2xl w-full text-xl font-bold shadow-lg">اسمع رسالة نرجس 🎁</button>
+                        <img src="${qrCodeFile}" class="w-40 mx-auto mt-12 rounded-xl shadow-md border">
+                    </div>`;
                 } else {
-                    div.innerHTML = `
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="text-2xl font-black">${item.name}</h3>
-                            <button onclick="talk('${item.en}', 'en-US')" class="bg-purple-100 p-2 rounded-full">🔈</button>
+                    sec.innerHTML = `
+                        <div class="p-4 flex justify-between items-center">
+                            <h3 class="text-3xl font-black text-gray-800">${item.title}</h3>
+                            <button onclick="playVoice('${item.en}', 'en-US')" class="bg-purple-100 p-3 rounded-full text-2xl shadow-sm">🔈</button>
                         </div>
-                        <div class="canvas-wrapper">
-                            <img src="${item.img}" class="bg-img">
-                            <canvas id="c-${item.id}" width="300" height="300"></canvas>
+                        <div class="paint-area">
+                            <img src="${item.img}" class="animal-template">
+                            <canvas id="canv-${item.id}" width="300" height="300"></canvas>
                         </div>
-                        <div class="text-center">
-                            <p class="text-xs font-bold text-orange-500">🔍 ابحث عن: ${item.search}</p>
-                            <button onclick="talk('${item.fact}', 'ar-SA')" class="text-purple-500 text-sm underline mt-2">اسمع الحقيقة السحرية ✨</button>
+                        <div class="text-center px-4">
+                            <div class="bg-orange-50 text-orange-600 py-2 rounded-xl font-bold mb-3 border border-orange-100">🔍 ابحث عن: ${item.search}</div>
+                            <button onclick="playVoice('${item.info}', 'ar-SA')" class="text-purple-600 font-bold underline decoration-wavy">اسمع الحقيقة السحرية ✨</button>
                         </div>`;
                 }
-                pageContainer.appendChild(div);
+                container.appendChild(sec);
             });
-            showPage('home');
+            switchSection('start');
         }
 
-        function showPage(id) {
-            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-            document.getElementById('p-' + id).classList.add('active');
-            document.getElementById('t-' + id).classList.add('nav-active');
-            document.getElementById('controls').style.display = (id === 'home' || id === 'gift') ? 'none' : 'flex';
+        function switchSection(id) {
+            document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active-tab'));
             
-            if(id !== 'home' && id !== 'gift') setupCanvas('c-' + id);
+            document.getElementById('view-' + id).classList.add('active');
+            document.getElementById('tab-btn-' + id).classList.add('active-tab');
+            
+            document.getElementById('paint-tools').style.display = (id === 'start' || id === 'win') ? 'none' : 'flex';
+            
+            if(id !== 'start' && id !== 'win') startDrawing('canv-' + id);
         }
 
-        function setupCanvas(canvasId) {
-            canvas = document.getElementById(canvasId);
-            ctx = canvas.getContext('2d');
-            ctx.lineCap = 'round';
-            ctx.lineWidth = 12;
+        function startDrawing(cId) {
+            activeCanvas = document.getElementById(cId);
+            activeCtx = activeCanvas.getContext('2d');
+            activeCtx.lineCap = 'round';
+            activeCtx.lineWidth = 14;
 
-            const draw = (e) => {
+            const handleDraw = (e) => {
                 if(e.buttons !== 1 && e.type !== 'touchmove') return;
-                const rect = canvas.getBoundingClientRect();
+                const rect = activeCanvas.getBoundingClientRect();
                 const x = (e.clientX || e.touches[0].clientX) - rect.left;
                 const y = (e.clientY || e.touches[0].clientY) - rect.top;
                 
-                ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
-                ctx.strokeStyle = activeColor;
-                ctx.lineTo(x, y);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(x, y);
+                activeCtx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+                activeCtx.strokeStyle = penColor;
+                activeCtx.lineTo(x, y);
+                activeCtx.stroke();
+                activeCtx.beginPath();
+                activeCtx.moveTo(x, y);
             };
 
-            canvas.onmousedown = (e) => { ctx.beginPath(); draw(e); };
-            canvas.onmousemove = draw;
-            canvas.ontouchstart = (e) => { e.preventDefault(); ctx.beginPath(); draw(e); };
-            canvas.ontouchmove = (e) => { e.preventDefault(); draw(e); };
+            activeCanvas.onmousedown = (e) => { activeCtx.beginPath(); handleDraw(e); };
+            activeCanvas.onmousemove = handleDraw;
+            activeCanvas.ontouchstart = (e) => { e.preventDefault(); activeCtx.beginPath(); handleDraw(e); };
+            activeCanvas.ontouchmove = (e) => { e.preventDefault(); handleDraw(e); };
         }
 
-        function setPaint(color, btn) {
-            isEraser = false; activeColor = color;
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+        function pickColor(c, btn) {
+            isEraser = false; penColor = c;
+            document.querySelectorAll('.dot').forEach(d => d.classList.remove('selected'));
             btn.classList.add('selected');
-            // تنشيط محرك الصوت
+            // تنشيط الصوت للسامسونج
             window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
         }
 
-        function setEraser() { isEraser = true; }
-        function resetCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+        function setEraserMode() { isEraser = true; document.querySelectorAll('.dot').forEach(d => d.classList.remove('selected')); }
+        function clearBoard() { if(activeCtx) activeCtx.clearRect(0, 0, 300, 300); }
 
-        function talk(txt, lang) {
+        function playVoice(msg, lang) {
             window.speechSynthesis.cancel();
-            const m = new SpeechSynthesisUtterance(txt);
-            m.lang = lang;
-            m.rate = 0.8;
-            window.speechSynthesis.speak(m);
+            const speech = new SpeechSynthesisUtterance(msg);
+            speech.lang = lang;
+            speech.rate = 0.8;
+            window.speechSynthesis.speak(speech);
         }
-
-        window.onload = init;
     </script>
 </body>
 </html>
