@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>مرسم نرجس عمران المطور</title>
+    <title>مرسم نرجس عمران - النسخة التعليمية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
         body { font-family: 'Cairo', sans-serif; background: #fdfcfe; overflow-x: hidden; scroll-behavior: smooth; }
         
-        /* السحب العمودي الانسيابي */
         .page-view { 
             min-height: 100vh; width: 100vw; display: flex; flex-direction: column; 
             padding-bottom: 120px; border-bottom: 10px dashed #f3e8ff; position: relative;
         }
 
-        /* نبض الحيوان واللوحة */
-        .pulse-box { animation: pulseAnim 3s infinite ease-in-out; }
-        @keyframes pulseAnim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        .welcome-pulse { animation: pulseTwice 1.5s ease-in-out 2; }
+        @keyframes pulseTwice {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
 
-        /* الرسام (Canvas) */
         .canvas-container { 
             position: relative; width: 320px; height: 320px; margin: 10px auto; 
             background: white; border-radius: 30px; border: 8px solid #a855f7; 
@@ -28,35 +28,37 @@
         canvas { position: absolute; top: 0; left: 0; z-index: 30; cursor: crosshair; }
         .animal-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 10; pointer-events: none; opacity: 0.7; }
 
-        /* شريط الأدوات */
         .toolbar { display: flex; justify-content: center; gap: 12px; background: rgba(255,255,255,0.9); padding: 15px; border-top: 3px solid #f3e8ff; position: fixed; bottom: 0; width: 100%; z-index: 100; backdrop-filter: blur(5px); }
-        .dot { width: 45px; height: 45px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.1); transition: 0.2s; }
+        .dot { width: 45px; height: 45px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
         .active-dot { border-color: #a855f7; transform: scale(1.15); }
         
-        /* خط التتبع */
-        .trace-font { font-family: sans-serif; font-size: 2.5rem; letter-spacing: 5px; color: transparent; -webkit-text-stroke: 1px #ddd; font-weight: 900; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; }
+        .trace-text { 
+            font-family: sans-serif; font-size: 3rem; letter-spacing: 5px; 
+            color: transparent; -webkit-text-stroke: 1.5px #e2e8f0; 
+            font-weight: 900; position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); z-index: 5; pointer-events: none;
+        }
     </style>
 </head>
-<body>
+<body onload="init()">
 
     <section class="page-view text-center bg-purple-50">
         <div class="my-auto">
             <h1 class="text-4xl font-black text-purple-700 mb-6">مرسم الغابة الذكي</h1>
-            <img src="https://img.freepik.com/free-vector/wild-animals-coloring-page_23-2148854378.jpg" class="w-72 mx-auto rounded-3xl shadow-2xl pulse-box mb-8">
-            <p class="text-xl font-bold text-purple-400">اسحب للأعلى لتبدأ الرسم 👇</p>
-            <p class="mt-4 font-bold text-gray-400">نرجس عمران</p>
+            <img src="https://img.freepik.com/free-vector/wild-animals-coloring-page_23-2148854378.jpg" class="w-72 mx-auto rounded-3xl shadow-2xl welcome-pulse mb-8">
+            <p class="text-xl font-bold text-purple-400">اسحب للأعلى لتبدأ 👇</p>
+            <p class="mt-4 font-bold text-gray-400">إعداد: نرجس عمران</p>
         </div>
     </section>
 
     <section class="page-view text-center px-6">
         <div class="my-auto">
-            <h2 class="text-3xl font-black mb-6 italic">دليل الرسام الصغير 📖</h2>
-            <div class="space-y-4 text-right">
-                <p class="bg-white p-4 rounded-2xl shadow-sm border-r-8 border-purple-500 font-bold">🎨 <span class="text-purple-600">ارسم:</span> حرك إصبعك فوق الحيوان لتلونه.</p>
-                <p class="bg-white p-4 rounded-2xl shadow-sm border-r-8 border-blue-500 font-bold">🔈 <span class="text-blue-600">اسمع:</span> اضغط على السماعة لسماع الاسم بالإنجليزية.</p>
-                <p class="bg-white p-4 rounded-2xl shadow-sm border-r-8 border-orange-500 font-bold">✨ <span class="text-orange-600">تعلم:</span> اضغط لسماع حقيقة مدهشة بالإنجليزية.</p>
+            <h2 class="text-3xl font-black mb-6 italic text-purple-600">دليل الرسام المبدع 📖</h2>
+            <div class="space-y-4 text-right text-sm">
+                <p class="bg-white p-4 rounded-2xl shadow-sm border-r-8 border-purple-500 font-bold">🎨 <span class="text-purple-600">تلوين وتتبع:</span> لون الحيوان وتتبع حروف اسمه الإنجليزية.</p>
+                <p class="bg-white p-4 rounded-2xl shadow-sm border-r-8 border-blue-500 font-bold">🔈 <span class="text-blue-600">نطق الاسم:</span> اسمع الاسم بلكنة إنجليزية صحيحة.</p>
+                <p class="bg-white p-4 rounded-2xl shadow-sm border-r-8 border-orange-500 font-bold">✨ <span class="text-orange-600">حقائق سحرية:</span> اقرأ بالعربي واسمع بالإنجليزية.</p>
             </div>
-            <p class="mt-10 animate-bounce">اسحب للأعلى 👇</p>
         </div>
     </section>
 
@@ -65,14 +67,9 @@
     <section class="page-view text-center bg-purple-50">
         <div class="my-auto px-6">
             <h2 class="text-6xl mb-6">🎁</h2>
-            <h3 class="text-2xl font-black mb-8 uppercase text-purple-700 italic">You are an Amazing Artist!</h3>
-            
-            <button onclick="playSong()" class="bg-purple-600 text-white w-full py-5 rounded-3xl font-bold shadow-2xl text-xl flex items-center justify-center gap-3">
-                <span>🎶 اسمع أغنية نرجس 🎶</span>
-            </button>
-            
+            <h3 class="text-2xl font-black mb-8 text-purple-700 italic uppercase">Amazing Artist!</h3>
+            <button onclick="playSong()" class="bg-purple-600 text-white w-full py-5 rounded-3xl font-bold shadow-2xl text-xl">🎶 اسمع أغنية نرجس 🎶</button>
             <div class="mt-12 bg-white p-4 rounded-2xl shadow-lg border w-40 mx-auto">
-                <p class="text-xs font-bold text-gray-400 mb-2">رمز إبداعك</p>
                 <img src="chrome_qrcode_1776215174727.png" class="w-full">
             </div>
         </div>
@@ -89,11 +86,11 @@
     <script>
         let currentColor = '#ef4444', contexts = [];
         const bookData = [
-            { name: 'الأسد', en: 'LION', search: 'العظمة', img: 'Screenshot_20260414-182747_Chrome.jpg', fact: 'The lion is the king of the jungle, he is very strong' },
-            { name: 'البومة', en: 'OWL', search: 'الهلال', img: 'Screenshot_20260414-212533_Chrome.jpg', fact: 'The owl sleeps during the day and wakes up at night' },
-            { name: 'الفيل', en: 'ELEPHANT', search: 'النملة', img: 'Screenshot_20260414-213329_Chrome.jpg', fact: 'The elephant has a very long trunk and a smart memory' },
-            { name: 'القرد', en: 'MONKEY', search: 'الموزة', img: 'Screenshot_20260414-221054_Chrome.jpg', fact: 'The monkey loves jumping and eating sweet bananas' },
-            { name: 'الزرافة', en: 'GIRAFFE', search: 'العصفورة', img: 'images.jpeg', fact: 'The giraffe has a very long neck to reach the trees' }
+            { name: 'الأسد', en: 'LION', search: 'العظمة', img: 'Screenshot_20260414-182747_Chrome.jpg', factAr: 'الأسد ملك الغابة وهو قوي جداً', factEn: 'The lion is the king of the jungle, he is very strong' },
+            { name: 'البومة', en: 'OWL', search: 'الهلال', img: 'Screenshot_20260414-212533_Chrome.jpg', factAr: 'البومة تنام نهاراً وتستيقظ ليلاً', factEn: 'The owl sleeps during the day and wakes up at night' },
+            { name: 'الفيل', en: 'ELEPHANT', search: 'النملة', img: 'Screenshot_20260414-213329_Chrome.jpg', factAr: 'الفيل له خرطوم طويل وذاكرة ذكية', factEn: 'The elephant has a long trunk and a smart memory' },
+            { name: 'القرد', en: 'MONKEY', search: 'الموزة', img: 'Screenshot_20260414-221054_Chrome.jpg', factAr: 'القرد يحب القفز وأكل الموز اللذيذ', factEn: 'The monkey loves jumping and eating bananas' },
+            { name: 'الزرافة', en: 'GIRAFFE', search: 'العصفورة', img: 'images.jpeg', factAr: 'الزرافة لها رقبة طويلة لتصل للأشجار', factEn: 'The giraffe has a long neck to reach the trees' }
         ];
 
         function init() {
@@ -106,15 +103,19 @@
                         <h2 class="text-3xl font-black text-purple-700">${p.name}</h2>
                         <button onclick="talk('${p.en}', 'en-US')" class="bg-purple-100 p-3 rounded-full text-2xl shadow-inner">🔈</button>
                     </div>
-                    <div class="canvas-container pulse-box">
-                        <div class="trace-font">${p.en}</div>
+                    <div class="canvas-container welcome-pulse">
+                        <div class="trace-text">${p.en}</div>
                         <img src="${p.img}" class="animal-img">
                         <canvas id="canvas-${i}" width="320" height="320"></canvas>
                     </div>
                     <div class="text-center px-6 mt-4">
-                        <div class="bg-orange-50 text-orange-600 p-3 rounded-2xl font-bold mb-4 shadow-inner italic">🔍 ابحث عن: ${p.search}</div>
-                        <button onclick="talk('${p.fact}', 'en-US')" class="bg-purple-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg flex items-center mx-auto gap-2">
-                            <span>✨ Listen Magic Fact (EN)</span>
+                        <div class="bg-orange-50 text-orange-600 p-2 rounded-2xl font-bold mb-3 italic text-xs">🔍 ابحث عن: ${p.search}</div>
+                        <div class="bg-purple-50 p-3 rounded-2xl border border-purple-100 mb-3">
+                            <p class="text-purple-800 text-sm font-bold mb-1">${p.factAr}</p>
+                            <p class="text-gray-400 text-[10px] italic">${p.factEn}</p>
+                        </div>
+                        <button onclick="talk('${p.factEn}', 'en-US')" class="bg-purple-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg flex items-center mx-auto gap-2 text-sm">
+                            <span>✨ Listen (نطق إنجليزي)</span>
                         </button>
                     </div>
                 `;
@@ -132,9 +133,9 @@
 
                 const getPos = (e) => {
                     const r = cvs.getBoundingClientRect();
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                    return { x: clientX - r.left, y: clientY - r.top };
+                    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+                    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+                    return { x: cx - r.left, y: cy - r.top };
                 };
 
                 const start = (e) => { 
@@ -160,7 +161,7 @@
                 cvs.addEventListener('touchstart', start, {passive: false});
                 cvs.addEventListener('touchmove', move, {passive: false});
                 cvs.addEventListener('touchend', stop);
-            }, 500);
+            }, 600);
         }
 
         function pickColor(c, btn) { 
@@ -182,8 +183,6 @@
             const song = "Yellow and Red, Green and Blue. Animals are happy, and colors too! I can draw a lion, I can draw a sun. Coloring with Narjes is so much fun!";
             talk(song, "en-US");
         }
-
-        window.onload = init;
     </script>
 </body>
 </html>
