@@ -44,7 +44,7 @@
         ];
 
         function speak(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
+            const qrCodeFileName = 'chrome_qrcode_1776215174727.png';
             utterance.lang = 'en-US';
             utterance.rate = 0.8;
             window.speechSynthesis.speak(utterance);
