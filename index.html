@@ -3,27 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>كتاب نرجس الذكي</title>
+    <title>مرسم نرجس الذكي</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
         body { font-family: 'Cairo', sans-serif; background: #fdfcfe; overflow: hidden; touch-action: none; }
-        .page-view { display: none; height: 100vh; flex-direction: column; overflow-y: auto; padding-bottom: 120px; }
-        .page-view.active { display: flex; animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         
-        .welcome-anim { animation: bounceIn 0.8s ease; }
-        @keyframes bounceIn { 0% { transform: scale(0.3); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        /* انسيابية السحب */
+        #container { display: flex; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); height: 100vh; width: 800vw; }
+        .page-view { width: 100vw; height: 100vh; flex-shrink: 0; display: flex; flex-direction: column; overflow-y: auto; padding-bottom: 120px; }
 
-        .canvas-area { position: relative; width: 310px; height: 310px; margin: 10px auto; background: white; border-radius: 25px; border: 6px solid #a855f7; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        canvas { position: absolute; top: 0; left: 0; z-index: 30; touch-action: none; background: transparent; }
+        .canvas-area { position: relative; width: 310px; height: 310px; margin: 10px auto; background: white; border-radius: 25px; border: 6px solid #a855f7; overflow: hidden; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 30; touch-action: none; }
         .animal-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 10; pointer-events: none; opacity: 0.6; }
 
-        .toolbar { display: flex; justify-content: center; gap: 8px; background: white; padding: 15px; border-top: 3px solid #f3e8ff; position: fixed; bottom: 0; width: 100%; z-index: 100; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
-        .dot { width: 42px; height: 42px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; }
-        .dot.active-dot { border-color: #a855f7; transform: scale(1.15); }
-        .nav-btn { padding: 8px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; background: #f3f4f6; white-space: nowrap; border: 1px solid transparent; }
-        .nav-active { background: #a855f7; color: white; border-color: #9333ea; }
+        .toolbar { display: flex; justify-content: center; gap: 8px; background: white; padding: 15px; border-top: 3px solid #f3e8ff; position: fixed; bottom: 0; width: 100%; z-index: 100; }
+        .dot { width: 42px; height: 42px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .dot.active-dot { border-color: #a855f7; transform: scale(1.1); }
+        
+        .nav-btn { padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: bold; background: #f3f4f6; white-space: nowrap; }
+        .nav-active { background: #a855f7; color: white; }
         .trace-font { font-family: sans-serif; font-size: 2.2rem; letter-spacing: 5px; color: transparent; -webkit-text-stroke: 1px #cbd5e1; font-weight: 900; }
     </style>
 </head>
@@ -33,7 +32,7 @@
         <div id="tabs" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
     </nav>
 
-    <main id="container" class="flex-grow"></main>
+    <main id="container"></main>
 
     <div id="paint-tools" class="toolbar hidden">
         <button class="dot bg-red-500 active-dot" onclick="pickColor('#ef4444', this)"></button>
@@ -42,110 +41,103 @@
         <button class="dot bg-green-500" onclick="pickColor('#22c55e', this)"></button>
         <button class="text-3xl" onclick="setEraser()">🧽</button>
         <button class="text-3xl" onclick="clearCanvas()">🗑️</button>
-        <button class="bg-purple-600 px-4 py-1 rounded-xl text-white font-bold" onclick="next()">➔</button>
+        <button class="bg-purple-600 px-4 py-1 rounded-xl text-white font-bold" onclick="nextPage()">التالي</button>
     </div>
 
     <script>
         let currentColor = '#ef4444', eraser = false, currentCtx, currentIndex = 0;
-        const qr = "chrome_qrcode_1776215174727.png";
-
+        let startX = 0;
         const bookData = [
             { id: 'cover', name: '🏠 الغلاف' },
             { id: 'guide', name: '📖 الدليل' },
-            { id: 'lion', name: 'الأسد', en: 'LION', search: 'العظمة', img: 'Screenshot_20260414-182747_Chrome.jpg', fact: 'الأسد ملك الغابة، زئيره يُسمع من بعيد!' },
-            { id: 'owl', name: 'البومة', en: 'OWL', search: 'الهلال', img: 'Screenshot_20260414-212533_Chrome.jpg', fact: 'البومة تنام في النهار وتستيقظ في الليل.' },
-            { id: 'elephant', name: 'الفيل', en: 'ELEPHANT', search: 'النملة', img: 'Screenshot_20260414-213329_Chrome.jpg', fact: 'الفيل يمتلك خرطومًا طويلاً وذاكرة ذكية.' },
-            { id: 'monkey', name: 'القرد', en: 'MONKEY', search: 'الموزة', img: 'Screenshot_20260414-221054_Chrome.jpg', fact: 'القرد يحب القفز والمرح وأكل الموز.' },
-            { id: 'giraffe', name: 'الزرافة', en: 'GIRAFFE', search: 'العصفورة', img: 'images.jpeg', fact: 'الزرافة هي أطول حيوان ولها رقبة طويلة.' },
+            { id: 'lion', name: 'الأسد', en: 'LION', search: 'العظمة', img: 'Screenshot_20260414-182747_Chrome.jpg', factAr: 'الأسد ملك الغابة، زئيره قوي جداً', factEn: 'The lion is the king of the jungle, his roar is very strong' },
+            { id: 'owl', name: 'البومة', en: 'OWL', search: 'الهلال', img: 'Screenshot_20260414-212533_Chrome.jpg', factAr: 'البومة تنام في النهار وتستيقظ في الليل', factEn: 'The owl sleeps during the day and wakes up at night' },
+            { id: 'elephant', name: 'الفيل', en: 'ELEPHANT', search: 'النملة', img: 'Screenshot_20260414-213329_Chrome.jpg', factAr: 'الفيل لديه خرطوم طويل وذاكرة ذكية', factEn: 'The elephant has a long trunk and a smart memory' },
+            { id: 'monkey', name: 'القرد', en: 'MONKEY', search: 'الموزة', img: 'Screenshot_20260414-221054_Chrome.jpg', factAr: 'القرد يحب القفز والمرح وأكل الموز', factEn: 'The monkey loves jumping and eating bananas' },
+            { id: 'giraffe', name: 'الزرافة', en: 'GIRAFFE', search: 'العصفورة', img: 'images.jpeg', factAr: 'الزرافة هي أطول حيوان ولها رقبة طويلة', factEn: 'The giraffe is the tallest animal and has a long neck' },
             { id: 'gift', name: '🎁 الهدية' }
         ];
 
         function initApp() {
             const tabs = document.getElementById('tabs');
-            const main = document.getElementById('container');
+            const container = document.getElementById('container');
 
             bookData.forEach((p, i) => {
                 const b = document.createElement('button');
                 b.className = `nav-btn ${i===0?'nav-active':''}`;
                 b.innerText = p.name;
-                b.onclick = () => show(i);
+                b.onclick = () => showPage(i);
                 b.id = 'tab-'+i;
                 tabs.appendChild(b);
 
                 const sec = document.createElement('section');
-                sec.id = 'view-'+i;
-                sec.className = `page-view ${i===0?'active':''}`;
-
+                sec.className = `page-view`;
                 if(p.id === 'cover') {
                     sec.innerHTML = `<div class="text-center p-6 my-auto">
                         <h1 class="text-4xl font-black mb-4">مرسم الغابة</h1>
-                        <img src="https://img.freepik.com/free-vector/wild-animals-coloring-page_23-2148854378.jpg" class="rounded-3xl shadow-xl mb-6 welcome-anim">
-                        <button onclick="show(1)" class="bg-purple-600 text-white px-10 py-4 rounded-2xl font-bold text-xl shadow-lg">ابدأ المغامرة ➔</button>
-                        <p class="mt-4 text-purple-500 font-bold italic">نرجس عمران</p>
+                        <img src="https://img.freepik.com/free-vector/wild-animals-coloring-page_23-2148854378.jpg" class="rounded-3xl shadow-xl mb-6">
+                        <button onclick="nextPage()" class="bg-purple-600 text-white px-10 py-4 rounded-2xl font-bold shadow-lg">ابدأ بالسحب ➔</button>
                     </div>`;
                 } else if(p.id === 'guide') {
-                    sec.innerHTML = `<div class="p-6 my-auto">
-                        <h2 class="text-3xl font-black text-center mb-6">كيف نلعب؟ 📖</h2>
-                        <div class="space-y-4 text-right">
-                            <div class="bg-white p-4 rounded-2xl shadow-sm border-r-4 border-purple-500">🎨 <span class="font-bold">التلوين:</span> اختر لوناً من الأسفل وامسح بإصبعك فوق الصورة.</div>
-                            <div class="bg-white p-4 rounded-2xl shadow-sm border-r-4 border-blue-500">🔈 <span class="font-bold">السماع:</span> اضغط على زر السماعة لسماع الاسم بالإنجليزية.</div>
-                            <div class="bg-white p-4 rounded-2xl shadow-sm border-r-4 border-orange-500">🔍 <span class="font-bold">البحث:</span> ابحث عن الشيء المفقود داخل الصورة.</div>
-                            <div class="bg-white p-4 rounded-2xl shadow-sm border-r-4 border-green-500">✨ <span class="font-bold">الحقائق:</span> اضغط لسماع معلومة مدهشة عن الحيوان.</div>
+                    sec.innerHTML = `<div class="p-6 my-auto text-center">
+                        <h2 class="text-3xl font-black mb-6">كيف نلعب؟ 📖</h2>
+                        <p class="mb-4 bg-purple-50 p-3 rounded-xl font-bold">اسحب الشاشة لليسار للانتقال</p>
+                        <div class="space-y-3 text-right">
+                            <div class="bg-white p-3 rounded-xl shadow-sm border-r-4 border-purple-500">🎨 تلوين بإصبعك</div>
+                            <div class="bg-white p-3 rounded-xl shadow-sm border-r-4 border-orange-500">✨ حقائق مدهشة بالإنجليزية</div>
                         </div>
-                        <button onclick="show(2)" class="mt-8 bg-purple-600 text-white w-full py-4 rounded-2xl font-bold shadow-lg">فهمت، لنبدأ! ➔</button>
                     </div>`;
                 } else if(p.id === 'gift') {
                     sec.innerHTML = `<div class="text-center p-6 my-auto">
-                        <h2 class="text-6xl mb-6">🎁</h2>
-                        <h3 class="text-2xl font-bold text-purple-700 mb-6 uppercase">You are amazing!</h3>
-                        <button onclick="speak('Excellent work, you are a great artist', 'en-US')" class="bg-purple-600 text-white p-5 rounded-2xl w-full font-bold shadow-lg text-lg">اسمع رسالة نرجس 🔈</button>
-                        <img src="${qr}" class="w-32 mx-auto mt-10 rounded-lg shadow-md border">
+                        <h2 class="text-5xl mb-6">🎁</h2>
+                        <button onclick="speak('You are an amazing artist!', 'en-US')" class="bg-purple-600 text-white p-5 rounded-2xl w-full font-bold shadow-lg">اسمع الهدية 🔈</button>
                     </div>`;
                 } else {
                     sec.innerHTML = `
                         <div class="p-4 flex justify-between items-center">
-                            <div><h2 class="text-2xl font-black text-gray-800">${p.name}</h2></div>
+                            <h2 class="text-2xl font-black text-gray-800">${p.name}</h2>
                             <button onclick="speak('${p.en}', 'en-US')" class="bg-purple-600 text-white w-10 h-10 rounded-full shadow-lg">🔈</button>
                         </div>
-                        <div class="canvas-area welcome-anim" id="box-${i}">
+                        <div class="canvas-area">
                             <img src="${p.img}" class="animal-bg">
                             <canvas id="c-${i}" width="310" height="310"></canvas>
                         </div>
                         <div class="text-center px-4 mt-2">
-                            <div class="trace-font mb-2">${p.en}</div>
-                            <div class="bg-orange-50 text-orange-600 py-2 rounded-xl font-bold mb-3 text-xs">🔍 ابحث عن: ${p.search}</div>
-                            <p id="fact-txt-${i}" class="hidden bg-purple-50 text-purple-800 p-2 rounded-lg text-xs font-bold mb-2"></p>
-                            <button onclick="showFact(${i}, '${p.fact}')" class="text-purple-600 font-bold underline text-sm">✨ اسمع الحقيقة السحرية</button>
+                            <div class="trace-font mb-1">${p.en}</div>
+                            <div class="bg-orange-50 text-orange-600 py-1 rounded-xl font-bold mb-2 text-xs">🔍 ابحث عن: ${p.search}</div>
+                            <p id="fact-txt-${i}" class="hidden bg-purple-50 text-purple-800 p-2 rounded-lg text-xs font-bold mb-2">${p.factAr}</p>
+                            <button onclick="showFact(${i}, '${p.factEn}')" class="text-purple-600 font-bold underline text-sm">✨ Listen Magic Fact (EN)</button>
                         </div>`;
                 }
-                main.appendChild(sec);
+                container.appendChild(sec);
             });
+
+            document.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+            document.addEventListener('touchend', e => {
+                let endX = e.changedTouches[0].clientX;
+                if (startX - endX > 70) nextPage();
+                if (endX - startX > 70) prevPage();
+            });
+            showPage(0);
         }
 
-        function show(idx) {
+        function showPage(idx) {
             currentIndex = idx;
-            document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-            document.getElementById('view-'+idx).classList.add('active');
-            document.getElementById('tab-'+idx).classList.add('nav-active');
-            
-            const isToolPage = idx > 1 && idx < bookData.length - 1;
-            document.getElementById('paint-tools').classList.toggle('hidden', !isToolPage);
-            
-            if(isToolPage) {
-                const box = document.getElementById('box-'+idx);
-                box.classList.remove('welcome-anim'); void box.offsetWidth; box.classList.add('welcome-anim');
-                initCanvas(idx);
-            }
+            document.getElementById('container').style.transform = `translateX(${idx * 100}vw)`;
+            document.querySelectorAll('.nav-btn').forEach((b, i) => b.classList.toggle('nav-active', i === idx));
+            const isDraw = idx > 1 && idx < bookData.length - 1;
+            document.getElementById('paint-tools').classList.toggle('hidden', !isDraw);
+            if(isDraw) initCanvas(idx);
             window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
         }
+
+        function nextPage() { if(currentIndex < bookData.length - 1) showPage(currentIndex + 1); }
+        function prevPage() { if(currentIndex > 0) showPage(currentIndex - 1); }
 
         function initCanvas(idx) {
             const canv = document.getElementById('c-'+idx);
             currentCtx = canv.getContext('2d');
-            currentCtx.lineCap = 'round';
-            currentCtx.lineWidth = 14;
-
+            currentCtx.lineCap = 'round'; currentCtx.lineWidth = 14;
             const draw = (e) => {
                 if(e.buttons !== 1 && e.type !== 'touchmove') return;
                 const r = canv.getBoundingClientRect();
@@ -156,7 +148,6 @@
                 currentCtx.lineTo(x, y); currentCtx.stroke();
                 currentCtx.beginPath(); currentCtx.moveTo(x, y);
             };
-
             canv.onmousedown = (e) => { currentCtx.beginPath(); draw(e); };
             canv.onmousemove = draw;
             canv.ontouchstart = (e) => { e.preventDefault(); currentCtx.beginPath(); draw(e); };
@@ -164,12 +155,10 @@
         }
 
         function showFact(idx, msg) {
-            const t = document.getElementById('fact-txt-'+idx);
-            t.innerText = msg; t.classList.remove('hidden');
-            speak(msg, 'ar-SA');
+            document.getElementById('fact-txt-'+idx).classList.remove('hidden');
+            speak(msg, 'en-US');
         }
 
-        function next() { let n = currentIndex + 1; if(n < bookData.length) show(n); }
         function pickColor(c, btn) { 
             eraser = false; currentColor = c; 
             document.querySelectorAll('.dot').forEach(d => d.classList.remove('active-dot'));
